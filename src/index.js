@@ -22,5 +22,6 @@ mouseMove$
   )
   .subscribe(pos => {
     console.log(pos)
+    ctx.fillRect(pos.x, pos.y, 2, 2)
   })
 
