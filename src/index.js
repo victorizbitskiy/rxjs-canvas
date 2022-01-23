@@ -1,5 +1,5 @@
 import { fromEvent } from 'rxjs'
-import { map } from 'rxjs/operators'
+import { map, pairwise } from 'rxjs/operators'
 
 const canvas = document.querySelector('canvas')
 
@@ -18,10 +18,15 @@ mouseMove$
     map(e => ({
       x: e.offsetX,
       y: e.offsetY,
-    }))
+    })),
+    pairwise()
   )
-  .subscribe(pos => {
-    console.log(pos)
-    ctx.fillRect(pos.x, pos.y, 2, 2)
+  .subscribe(([from, to]) => {
+    // console.log(pos)
+    
+    ctx.beginPath()
+    ctx.moveTo(from.x, from.y)
+    ctx.lineTo(to.x, to.y)
+    ctx.stroke()
   })
 
