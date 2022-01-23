@@ -1,5 +1,5 @@
 import { fromEvent } from 'rxjs'
-import { map, pairwise } from 'rxjs/operators'
+import { map, pairwise, switchMap } from 'rxjs/operators'
 
 const canvas = document.querySelector('canvas')
 
@@ -12,21 +12,26 @@ canvas.height = rect.height * scale
 ctx.scale(scale, scale)
 
 const mouseMove$ = fromEvent(canvas, 'mousemove')
+const mouseDown$ = fromEvent(canvas, 'mousedown')
 
-mouseMove$
-  .pipe(
-    map(e => ({
-      x: e.offsetX,
-      y: e.offsetY,
-    })),
-    pairwise()
-  )
-  .subscribe(([from, to]) => {
-    // console.log(pos)
-    
-    ctx.beginPath()
-    ctx.moveTo(from.x, from.y)
-    ctx.lineTo(to.x, to.y)
-    ctx.stroke()
+const stream$ = mouseDown$.pipe(
+  switchMap(() => {
+    return mouseMove$
+      .pipe(
+        map(e => ({
+          x: e.offsetX,
+          y: e.offsetY,
+        })),
+        pairwise()
+      )
   })
+)
+
+stream$.subscribe(([from, to]) => {
+  ctx.beginPath()
+  ctx.moveTo(from.x, from.y)
+  ctx.lineTo(to.x, to.y)
+  ctx.stroke()
+})
+
 
