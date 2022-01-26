@@ -1,7 +1,9 @@
 import { fromEvent } from 'rxjs'
-import { map, pairwise, switchMap, takeUntil } from 'rxjs/operators'
+import { map, pairwise, switchMap, takeUntil, withLatestFrom, startWith } from 'rxjs/operators'
 
 const canvas = document.querySelector('canvas')
+const range = document.getElementById('range')
+const color = document.getElementById('color')
 
 const ctx = canvas.getContext('2d')
 const rect = canvas.getBoundingClientRect()
@@ -16,14 +18,26 @@ const mouseDown$ = fromEvent(canvas, 'mousedown')
 const mouseUp$ = fromEvent(canvas, 'mouseup')
 const mouseOut$ = fromEvent(canvas, 'mouseout')
 
+const lineWith$ = fromEvent(range, 'input')
+  .pipe(
+    map(e => e.target.value),
+    startWith(range.value)
+  )
+
 const stream$ = mouseDown$
   .pipe(
-    switchMap(() => {
+    withLatestFrom(lineWith$, (_, lineWith) => {
+      return {
+        lineWith
+      }
+    }),
+    switchMap(options => {
       return mouseMove$
         .pipe(
           map(e => ({
             x: e.offsetX,
             y: e.offsetY,
+            options
           })),
           pairwise(),
           takeUntil(mouseUp$),
@@ -33,6 +47,9 @@ const stream$ = mouseDown$
   )
 
 stream$.subscribe(([from, to]) => {
+  const { lineWith } = from.options
+
+  ctx.lineWidth = lineWith
   ctx.beginPath()
   ctx.moveTo(from.x, from.y)
   ctx.lineTo(to.x, to.y)
