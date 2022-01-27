@@ -24,12 +24,16 @@ const lineWith$ = fromEvent(range, 'input')
     startWith(range.value)
   )
 
+const strokeStyle$ = fromEvent(color, 'input')
+  .pipe(
+    map(e => e.target.value),
+    startWith(color.value)
+  )
+
 const stream$ = mouseDown$
   .pipe(
-    withLatestFrom(lineWith$, (_, lineWith) => {
-      return {
-        lineWith
-      }
+    withLatestFrom(lineWith$, strokeStyle$, (_, lineWith, strokeStyle) => {
+      return { lineWith, strokeStyle }
     }),
     switchMap(options => {
       return mouseMove$
@@ -47,9 +51,11 @@ const stream$ = mouseDown$
   )
 
 stream$.subscribe(([from, to]) => {
-  const { lineWith } = from.options
+  const { lineWith, strokeStyle } = from.options
 
   ctx.lineWidth = lineWith
+  ctx.strokeStyle = strokeStyle
+
   ctx.beginPath()
   ctx.moveTo(from.x, from.y)
   ctx.lineTo(to.x, to.y)
